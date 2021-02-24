@@ -15,6 +15,7 @@ export default function Header({ title, showCancel = true }: HeaderProps) {
   function handleClose() {
     navigation.navigate("home");
   }
+
   return (
     <View style={styles.container}>
       <BorderlessButton onPress={navigation.goBack}>

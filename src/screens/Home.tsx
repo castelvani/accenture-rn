@@ -1,42 +1,66 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View, Dimensions } from "react-native";
 import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { RectButton } from "react-native-gesture-handler";
 import { Feather } from "@expo/vector-icons";
 import PinInsert from "../images/Pin.png";
 import { useNavigation } from "@react-navigation/native";
-// import { Container } from './styles';
+
+import { IInitialMarker, IAllUnits } from "../interfaces";
+import { getData } from "../service";
 
 export default function Home() {
   const navigation = useNavigation();
-  function handlePageDetails() {
-    navigation.navigate("accenture");
+
+  const [allUnits, setAllUnits] = useState<IAllUnits[]>([]);
+  const [initialMapMarker, setInitialMapMarker] = useState<IInitialMarker>({
+    latitude: -23.628949249999998,
+    longitude: -46.71006813701569,
+    latitudeDelta: 0.008,
+    longitudeDelta: 0.008,
+  });
+
+  useEffect(() => {
+    getData.get("all").then((response) => {
+      setAllUnits(response.data);
+    });
+  }, []);
+
+  function handlePageAccenture(id: number) {
+    navigation.navigate("accenture", { id });
   }
+
+  navigator.geolocation.getCurrentPosition((position) => {
+    const lat = position.coords.latitude;
+    const long = position.coords.longitude;
+  });
+
   return (
     <View style={styles.container}>
       <MapView
         provider={PROVIDER_GOOGLE}
         style={styles.map}
-        initialRegion={{
-          latitude: -23.49728,
-          longitude: -46.15428,
-          latitudeDelta: 0.008,
-          longitudeDelta: 0.008,
-        }}
+        initialRegion={initialMapMarker}
       >
-        <Marker
-          icon={PinInsert}
-          coordinate={{
-            latitude: -23.49728,
-            longitude: -46.15428,
-          }}
-        >
-          <Callout tooltip={true} onPress={handlePageDetails}>
-            <View style={styles.calloutContainer}>
-              <Text style={styles.calloutText}>Aqui</Text>
-            </View>
-          </Callout>
-        </Marker>
+        {allUnits.map((unit) => (
+          <Marker
+            key={unit.id}
+            icon={PinInsert}
+            coordinate={{
+              latitude: unit.latitude,
+              longitude: unit.longitude,
+            }}
+          >
+            <Callout
+              tooltip={true}
+              onPress={() => handlePageAccenture(unit.id)}
+            >
+              <View style={styles.calloutContainer}>
+                <Text style={styles.calloutText}>{unit.name}</Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
       </MapView>
       <View style={styles.footer}>
         <Text style={styles.footerText}>Texto qualquer</Text>
